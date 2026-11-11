@@ -1,0 +1,1496 @@
+# openapi.yaml
+
+```yaml
+openapi: 3.1.0
+
+info:
+  title: API - Gestión de Notas
+  version: 1.0.0
+  description: |
+    API multi-docente para gestionar escuelas, cursos, materias,
+    asignaciones, alumnos, matrículas, exámenes y calificaciones.
+
+    Cada docente únicamente puede acceder a los recursos de su propiedad.
+    El aislamiento de datos se aplica en el backend mediante el usuario
+    autenticado, nunca mediante un docenteId enviado por el cliente.
+
+    Los recuperatorios reemplazan la nota del examen original para el
+    cálculo de promedios. Las notas originales se conservan como historial.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Desarrollo local
+
+tags:
+  - name: Auth
+  - name: Escuelas
+  - name: Cursos
+  - name: Materias
+  - name: Asignaciones
+  - name: Alumnos
+  - name: Matrículas
+  - name: Exámenes
+  - name: Calificaciones
+  - name: Reportes
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # =========================================================
+  # AUTENTICACIÓN
+  # =========================================================
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Registrar docente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Docente registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Iniciar sesión
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticación correcta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Obtener docente autenticado
+      responses:
+        '200':
+          description: Perfil del docente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Docente'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # =========================================================
+  # ESCUELAS
+  # =========================================================
+
+  /escuelas:
+    get:
+      tags: [Escuelas]
+      summary: Listar escuelas del docente
+      responses:
+        '200':
+          description: Listado de escuelas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Escuela'
+
+    post:
+      tags: [Escuelas]
+      summary: Crear escuela
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscuelaCreate'
+      responses:
+        '201':
+          description: Escuela creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Escuela'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /escuelas/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Escuelas]
+      summary: Obtener escuela
+      responses:
+        '200':
+          description: Escuela encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Escuela'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Escuelas]
+      summary: Modificar escuela
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EscuelaPatch'
+      responses:
+        '200':
+          description: Escuela actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Escuela'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =========================================================
+  # CURSOS
+  # =========================================================
+
+  /cursos:
+    get:
+      tags: [Cursos]
+      summary: Listar cursos
+      parameters:
+        - name: escuelaId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Listado de cursos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Curso'
+
+    post:
+      tags: [Cursos]
+      summary: Crear curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursoCreate'
+      responses:
+        '201':
+          description: Curso creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Curso'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /cursos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Cursos]
+      summary: Obtener curso
+      responses:
+        '200':
+          description: Curso encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Curso'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Cursos]
+      summary: Modificar curso
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CursoPatch'
+      responses:
+        '200':
+          description: Curso actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Curso'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =========================================================
+  # MATERIAS
+  # =========================================================
+
+  /materias:
+    get:
+      tags: [Materias]
+      summary: Listar materias
+      responses:
+        '200':
+          description: Listado de materias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Materia'
+
+    post:
+      tags: [Materias]
+      summary: Crear materia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MateriaCreate'
+      responses:
+        '201':
+          description: Materia creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Materia'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /materias/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Materias]
+      summary: Obtener materia
+      responses:
+        '200':
+          description: Materia encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Materia'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Materias]
+      summary: Modificar materia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MateriaPatch'
+      responses:
+        '200':
+          description: Materia actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Materia'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =========================================================
+  # ASIGNACIONES
+  # =========================================================
+
+  /asignaciones:
+    get:
+      tags: [Asignaciones]
+      summary: Listar asignaciones docentes
+      parameters:
+        - name: cicloLectivo
+          in: query
+          schema:
+            type: integer
+        - name: escuelaId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: cursoId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+      responses:
+        '200':
+          description: Listado de asignaciones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Asignacion'
+
+    post:
+      tags: [Asignaciones]
+      summary: Crear asignación
+      description: |
+        El docente se obtiene del usuario autenticado.
+        El curso y la materia deben pertenecer al mismo docente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AsignacionCreate'
+      responses:
+        '201':
+          description: Asignación creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asignacion'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /asignaciones/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Asignaciones]
+      summary: Obtener asignación
+      responses:
+        '200':
+          description: Asignación encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Asignacion'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =========================================================
+  # ALUMNOS
+  # =========================================================
+
+  /alumnos:
+    get:
+      tags: [Alumnos]
+      summary: Buscar alumnos
+      parameters:
+        - name: q
+          in: query
+          description: Buscar por nombre, apellido o documento
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Listado paginado de alumnos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAlumnos'
+
+    post:
+      tags: [Alumnos]
+      summary: Registrar alumno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlumnoCreate'
+      responses:
+        '201':
+          description: Alumno registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alumno'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /alumnos/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Alumnos]
+      summary: Obtener alumno
+      responses:
+        '200':
+          description: Alumno encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alumno'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Alumnos]
+      summary: Modificar alumno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlumnoPatch'
+      responses:
+        '200':
+          description: Alumno actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Alumno'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # =========================================================
+  # MATRÍCULAS
+  # =========================================================
+
+  /matriculas:
+    get:
+      tags: [Matrículas]
+      summary: Listar matrículas
+      parameters:
+        - name: asignacionId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: alumnoId
+          in: query
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: estado
+          in: query
+          schema:
+            $ref: '#/components/schemas/EstadoMatricula'
+      responses:
+        '200':
+          description: Listado de matrículas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Matricula'
+
+    post:
+      tags: [Matrículas]
+      summary: Matricular alumno en una asignación
+      description: |
+        Una nueva matrícula genera una trayectoria independiente.
+        No recupera las calificaciones de matrículas anteriores.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatriculaCreate'
+      responses:
+        '201':
+          description: Matrícula creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matricula'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /matriculas/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Matrículas]
+      summary: Obtener matrícula
+      responses:
+        '200':
+          description: Matrícula encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matricula'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /matriculas/{id}/baja:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    post:
+      tags: [Matrículas]
+      summary: Dar de baja una matrícula
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BajaMatriculaInput'
+      responses:
+        '200':
+          description: Matrícula dada de baja
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Matricula'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # =========================================================
+  # EXÁMENES
+  # =========================================================
+
+  /examenes:
+    get:
+      tags: [Exámenes]
+      summary: Listar exámenes de una asignación
+      parameters:
+        - name: asignacionId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UUID'
+        - name: cuatrimestre
+          in: query
+          schema:
+            type: integer
+            enum: [1, 2]
+        - name: estado
+          in: query
+          schema:
+            $ref: '#/components/schemas/EstadoExamen'
+      responses:
+        '200':
+          description: Listado de exámenes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Examen'
+
+    post:
+      tags: [Exámenes]
+      summary: Crear examen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExamenCreate'
+      responses:
+        '201':
+          description: Examen creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Examen'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /examenes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Exámenes]
+      summary: Obtener examen
+      responses:
+        '200':
+          description: Examen encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Examen'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Exámenes]
+      summary: Modificar examen
+      description: No permite cambiar el vínculo de un recuperatorio.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExamenPatch'
+      responses:
+        '200':
+          description: Examen actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Examen'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /examenes/{id}/anular:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    post:
+      tags: [Exámenes]
+      summary: Anular examen
+      description: |
+        Un examen anulado queda excluido de los cálculos.
+        La anulación conserva sus resultados como historial.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnularExamenInput'
+      responses:
+        '200':
+          description: Examen anulado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Examen'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /examenes/{id}/recuperatorio:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    post:
+      tags: [Exámenes]
+      summary: Crear recuperatorio
+      description: |
+        Crea una evaluación vinculada al examen original.
+        El servidor determina asignación, cuatrimestre y tipo a partir
+        del examen original.
+
+        Para cada matrícula, una nota válida del recuperatorio reemplaza
+        la nota original en los cálculos. No se suma como otra evaluación.
+        La nota original se conserva como historial.
+
+        Si el recuperatorio está pendiente o el alumno está ausente,
+        se mantiene la nota original para el cálculo.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecuperatorioCreate'
+      responses:
+        '201':
+          description: Recuperatorio creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Examen'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # =========================================================
+  # CALIFICACIONES
+  # =========================================================
+
+  /examenes/{id}/resultados:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Calificaciones]
+      summary: Listar resultados de un examen
+      responses:
+        '200':
+          description: Resultados del examen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResultadoExamen'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Calificaciones]
+      summary: Cargar o actualizar resultados
+      description: |
+        Guarda los resultados enviados en una única transacción.
+        Cada matrícula debe pertenecer a la asignación del examen.
+        Los resultados de matrículas dadas de baja no pueden modificarse
+        mediante esta operación ordinaria.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResultadosBulkInput'
+      responses:
+        '200':
+          description: Resultados guardados
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResultadoExamen'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # =========================================================
+  # REPORTES
+  # =========================================================
+
+  /matriculas/{id}/promedios:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Reportes]
+      summary: Obtener promedios de una matrícula
+      description: |
+        Excluye exámenes anulados.
+        Si existe un recuperatorio calificado, utiliza su nota
+        en reemplazo de la nota original.
+      responses:
+        '200':
+          description: Promedios calculados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Promedios'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /matriculas/{id}/rite:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+
+    get:
+      tags: [Reportes]
+      summary: Obtener RITE de una matrícula
+      description: |
+        El promedio anual se calcula como la media aritmética
+        de los promedios de ambos cuatrimestres, con igual ponderación.
+
+        Si falta alguno de los promedios cuatrimestrales,
+        el promedio anual se devuelve como null.
+      responses:
+        '200':
+          description: RITE calculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rite'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+# ===========================================================
+# COMPONENTES
+# ===========================================================
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/UUID'
+
+  responses:
+
+    Unauthorized:
+      description: No autenticado o token inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Recurso inexistente o no accesible
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Conflicto de unicidad o estado del recurso
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ValidationError:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+  schemas:
+
+    # -------------------------------------------------------
+    # GENERALES
+    # -------------------------------------------------------
+
+    UUID:
+      type: string
+      format: uuid
+
+    Error:
+      type: object
+      required: [statusCode, message]
+      properties:
+        statusCode:
+          type: integer
+        message:
+          type: string
+        error:
+          type: string
+
+    ValidationError:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: array
+          items:
+            type: string
+        error:
+          type: string
+          example: Bad Request
+
+    # -------------------------------------------------------
+    # DOCENTES Y AUTENTICACIÓN
+    # -------------------------------------------------------
+
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required: [nombre, apellido, email, password]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+        apellido:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          minLength: 8
+          writeOnly: true
+
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+
+    AuthResponse:
+      type: object
+      required: [accessToken, docente]
+      properties:
+        accessToken:
+          type: string
+        docente:
+          $ref: '#/components/schemas/Docente'
+
+    Docente:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UUID'
+        nombre:
+          type: string
+        apellido:
+          type: string
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+
+    # -------------------------------------------------------
+    # ESCUELAS
+    # -------------------------------------------------------
+
+    EscuelaCreate:
+      type: object
+      additionalProperties: false
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        direccion:
+          type: [string, "null"]
+          maxLength: 255
+        localidad:
+          type: [string, "null"]
+          maxLength: 120
+
+    EscuelaPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        direccion:
+          type: [string, "null"]
+          maxLength: 255
+        localidad:
+          type: [string, "null"]
+          maxLength: 120
+
+    Escuela:
+      allOf:
+        - $ref: '#/components/schemas/EscuelaCreate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            createdAt:
+              type: string
+              format: date-time
+
+    # -------------------------------------------------------
+    # CURSOS
+    # -------------------------------------------------------
+
+    CursoCreate:
+      type: object
+      additionalProperties: false
+      required: [escuelaId, anio, division]
+      properties:
+        escuelaId:
+          $ref: '#/components/schemas/UUID'
+        anio:
+          type: integer
+          minimum: 1
+          maximum: 7
+        division:
+          type: string
+          minLength: 1
+          maxLength: 20
+        turno:
+          type: [string, "null"]
+          enum: [MANANA, TARDE, NOCHE, DOBLE, null]
+
+    CursoPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        anio:
+          type: integer
+          minimum: 1
+          maximum: 7
+        division:
+          type: string
+          minLength: 1
+          maxLength: 20
+        turno:
+          type: [string, "null"]
+          enum: [MANANA, TARDE, NOCHE, DOBLE, null]
+
+    Curso:
+      allOf:
+        - $ref: '#/components/schemas/CursoCreate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+
+    # -------------------------------------------------------
+    # MATERIAS
+    # -------------------------------------------------------
+
+    MateriaCreate:
+      type: object
+      additionalProperties: false
+      required: [nombre]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: [string, "null"]
+
+    MateriaPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: [string, "null"]
+
+    Materia:
+      allOf:
+        - $ref: '#/components/schemas/MateriaCreate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            createdAt:
+              type: string
+              format: date-time
+
+    # -------------------------------------------------------
+    # ASIGNACIONES
+    # -------------------------------------------------------
+
+    AsignacionCreate:
+      type: object
+      additionalProperties: false
+      required: [cursoId, materiaId, cicloLectivo]
+      properties:
+        cursoId:
+          $ref: '#/components/schemas/UUID'
+        materiaId:
+          $ref: '#/components/schemas/UUID'
+        cicloLectivo:
+          type: integer
+          minimum: 2000
+          maximum: 2100
+
+    Asignacion:
+      allOf:
+        - $ref: '#/components/schemas/AsignacionCreate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            escuelaId:
+              $ref: '#/components/schemas/UUID'
+            createdAt:
+              type: string
+              format: date-time
+
+    # -------------------------------------------------------
+    # ALUMNOS
+    # -------------------------------------------------------
+
+    AlumnoCreate:
+      type: object
+      additionalProperties: false
+      required: [nombre, apellido]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+        apellido:
+          type: string
+          minLength: 1
+          maxLength: 100
+        documento:
+          type: [string, "null"]
+          maxLength: 30
+        fechaNacimiento:
+          type: [string, "null"]
+          format: date
+        email:
+          type: [string, "null"]
+          format: email
+
+    AlumnoPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 100
+        apellido:
+          type: string
+          minLength: 1
+          maxLength: 100
+        documento:
+          type: [string, "null"]
+          maxLength: 30
+        fechaNacimiento:
+          type: [string, "null"]
+          format: date
+        email:
+          type: [string, "null"]
+          format: email
+
+    Alumno:
+      allOf:
+        - $ref: '#/components/schemas/AlumnoCreate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            createdAt:
+              type: string
+              format: date-time
+
+    PaginatedAlumnos:
+      type: object
+      required: [data, page, limit, total]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alumno'
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+
+    # -------------------------------------------------------
+    # MATRÍCULAS
+    # -------------------------------------------------------
+
+    EstadoMatricula:
+      type: string
+      enum: [ACTIVA, BAJA]
+
+    MatriculaCreate:
+      type: object
+      additionalProperties: false
+      required: [alumnoId, asignacionId, fechaAlta]
+      properties:
+        alumnoId:
+          $ref: '#/components/schemas/UUID'
+        asignacionId:
+          $ref: '#/components/schemas/UUID'
+        fechaAlta:
+          type: string
+          format: date
+
+    BajaMatriculaInput:
+      type: object
+      additionalProperties: false
+      required: [fechaBaja, motivo]
+      properties:
+        fechaBaja:
+          type: string
+          format: date
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    Matricula:
+      allOf:
+        - $ref: '#/components/schemas/MatriculaCreate'
+        - type: object
+          required: [id, estado]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            estado:
+              $ref: '#/components/schemas/EstadoMatricula'
+            fechaBaja:
+              type: [string, "null"]
+              format: date
+            motivoBaja:
+              type: [string, "null"]
+
+    # -------------------------------------------------------
+    # EXÁMENES
+    # -------------------------------------------------------
+
+    EstadoExamen:
+      type: string
+      enum: [ACTIVO, ANULADO]
+
+    TipoExamen:
+      type: string
+      enum: [REGULAR, RECUPERATORIO]
+
+    ExamenCreate:
+      type: object
+      additionalProperties: false
+      required: [asignacionId, titulo, fecha, cuatrimestre, notaMaxima]
+      properties:
+        asignacionId:
+          $ref: '#/components/schemas/UUID'
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: [string, "null"]
+        fecha:
+          type: string
+          format: date
+        cuatrimestre:
+          type: integer
+          enum: [1, 2]
+        notaMaxima:
+          type: number
+          exclusiveMinimum: 0
+          default: 10
+
+    ExamenPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: [string, "null"]
+        fecha:
+          type: string
+          format: date
+        notaMaxima:
+          type: number
+          exclusiveMinimum: 0
+
+    RecuperatorioCreate:
+      type: object
+      additionalProperties: false
+      required: [titulo, fecha]
+      properties:
+        titulo:
+          type: string
+          minLength: 1
+          maxLength: 150
+        descripcion:
+          type: [string, "null"]
+        fecha:
+          type: string
+          format: date
+        notaMaxima:
+          type: number
+          exclusiveMinimum: 0
+
+    AnularExamenInput:
+      type: object
+      additionalProperties: false
+      required: [motivo]
+      properties:
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 500
+
+    Examen:
+      allOf:
+        - $ref: '#/components/schemas/ExamenCreate'
+        - type: object
+          required: [id, tipo, estado]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            tipo:
+              $ref: '#/components/schemas/TipoExamen'
+            estado:
+              $ref: '#/components/schemas/EstadoExamen'
+            examenOriginalId:
+              oneOf:
+                - $ref: '#/components/schemas/UUID'
+                - type: 'null'
+            motivoAnulacion:
+              type: [string, "null"]
+            createdAt:
+              type: string
+              format: date-time
+
+    # -------------------------------------------------------
+    # RESULTADOS Y CALIFICACIONES
+    # -------------------------------------------------------
+
+    EstadoResultado:
+      type: string
+      enum: [PENDIENTE, CALIFICADA, AUSENTE]
+
+    ResultadoInput:
+      type: object
+      additionalProperties: false
+      required: [matriculaId, estado]
+      properties:
+        matriculaId:
+          $ref: '#/components/schemas/UUID'
+        estado:
+          $ref: '#/components/schemas/EstadoResultado'
+        nota:
+          type: [number, "null"]
+          minimum: 0
+        observacion:
+          type: [string, "null"]
+          maxLength: 1000
+
+    ResultadosBulkInput:
+      type: object
+      additionalProperties: false
+      required: [resultados]
+      properties:
+        resultados:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ResultadoInput'
+
+    ResultadoExamen:
+      allOf:
+        - $ref: '#/components/schemas/ResultadoInput'
+        - type: object
+          required: [id, examenId]
+          properties:
+            id:
+              $ref: '#/components/schemas/UUID'
+            examenId:
+              $ref: '#/components/schemas/UUID'
+            updatedAt:
+              type: string
+              format: date-time
+
+    # -------------------------------------------------------
+    # PROMEDIOS Y RITE
+    # -------------------------------------------------------
+
+    Promedios:
+      type: object
+      properties:
+        cuatrimestre1:
+          type: [number, "null"]
+        cuatrimestre2:
+          type: [number, "null"]
+        promedioAnual:
+          type: [number, "null"]
+
+    EstadoRite:
+      type: string
+      enum: [TEA, TEP, TED]
+
+    Rite:
+      type: object
+      properties:
+        promedioCuatrimestre1:
+          type: [number, "null"]
+        promedioCuatrimestre2:
+          type: [number, "null"]
+        promedioAnual:
+          type: [number, "null"]
+        estado:
+          oneOf:
+            - $ref: '#/components/schemas/EstadoRite'
+            - type: 'null'
+        observacion:
+          type: [string, "null"]
+```
+
+
